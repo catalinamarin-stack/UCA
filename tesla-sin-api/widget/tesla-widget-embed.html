@@ -1,0 +1,53 @@
+<div id="tesla-precios-unidad"></div>
+
+<style>
+  #tesla-precios-unidad { font-family: Montserrat, sans-serif; margin: 32px 0; }
+  #tesla-precios-unidad .wrap { width: 100%; overflow-x: auto; }
+  #tesla-precios-unidad table { width: 100%; border-collapse: collapse; border: 1px solid #f1e6de; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px rgba(224,89,46,.05); }
+  #tesla-precios-unidad thead tr { background: #ea6230; color: #fff; }
+  #tesla-precios-unidad th { padding: 14px 16px; font-weight: 700; text-align: center; font-size: 15px; white-space: nowrap; }
+  #tesla-precios-unidad td { padding: 12px 16px; text-align: center; font-size: 15px; border-top: 1px solid #f5ede7; color: #2f2a26; vertical-align: top; }
+  #tesla-precios-unidad tbody tr:nth-child(even) { background: #fff7f3; }
+  #tesla-precios-unidad tbody tr:nth-child(odd) { background: #fff; }
+  #tesla-precios-unidad .foot { margin-top: 12px; font-size: 14px; color: #6f645b; text-align: center; }
+  #tesla-precios-unidad .load { text-align: center; color: #6f645b; padding: 16px; }
+</style>
+
+<script>
+(function(){
+  const URL = "https://raw.githubusercontent.com/catalinamarin-stack/UCA/main/scrapeo/tesla-sin-api/widget/tesla-precios.json?v=" + Date.now();
+  const el = document.getElementById("tesla-precios-unidad");
+  el.innerHTML = '<div class="load">Cargando precios de Tesla...</div>';
+
+  fetch(URL)
+    .then(r => {
+      if(!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    })
+    .then(data => {
+      if(!data || !Array.isArray(data.modelos) || data.modelos.length === 0){
+        el.innerHTML = '<div class="load">No hay datos disponibles.</div>';
+        return;
+      }
+      let rows = "";
+      data.modelos.forEach(m => {
+        let vers = "—";
+        if(Array.isArray(m.versiones) && m.versiones.length){
+          vers = m.versiones.map(v => v.nombre + ": " + v.tasacion).join("<br>");
+        }
+        rows += "<tr><td><strong>" + m.nombre + "</strong></td><td>" + m.anio + "</td><td>" + m.min + " – " + m.max + "</td><td>" + vers + "</td></tr>";
+      });
+
+      el.innerHTML =
+        '<div class="wrap"><table>' +
+          '<thead><tr><th>Modelo</th><th>Año</th><th>Valor comercial de mercado (CLP)</th><th>Versiones (tasación fiscal)</th></tr></thead>' +
+          '<tbody>' + rows + '</tbody>' +
+        '</table></div>' +
+        '<div class="foot">Fuente: <a href="' + data.fuente_url + '" target="_blank" rel="noopener">' + data.fuente + '</a> · Actualizado el ' + data.actualizado + '. Valores aproximados, sujetos a evaluación.</div>';
+    })
+    .catch(err => {
+      console.error(err);
+      el.innerHTML = '<div class="load">Error al cargar la tabla.</div>';
+    });
+})();
+</script>
